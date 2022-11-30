@@ -202,7 +202,7 @@ namespace MyFace
             double total = compativel.Count + incompativel.Count;
             double porcCompativel = (compativel.Count/total) *100;
 
-            if ((compativel.Count > 900 && compativel.Count < 964) || compativel.Count > 1100)
+            if ((compativel.Count > 100 && compativel.Count < 200) || (compativel.Count > 900 && compativel.Count < 964) || compativel.Count > 1100)
             {
                 Debug.WriteLine("DataLog: " + DateTime.Now);
                 Debug.WriteLine("compativel: " + porcCompativel.ToString("0.00") + "%");
@@ -267,5 +267,6 @@ namespace MyFace
 
             picResultTrain.Image = result;
         }
+
     }
 }
