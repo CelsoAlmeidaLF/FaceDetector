@@ -1,7 +1,9 @@
 using Emgu.CV;
 using Emgu.CV.CvEnum;
+using Emgu.CV.Reg;
 using Emgu.CV.Structure;
 using MyFace.Util;
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -10,6 +12,7 @@ namespace MyFace
     public partial class frmMyFace : Form
     {
         #region 'Propriedades da classe'
+        int Max = 0;
         public ImageFile _image;
         VideoCapture videoCapture;
         Mat frame = new Mat();
@@ -41,6 +44,7 @@ namespace MyFace
         private void btnCapt_Click(object sender, EventArgs e)
         {
             EnabledSaveImage = true;
+            btnTrain.Enabled = true;
         }
 
         private void btnWebCam_Click(object sender, EventArgs e)
@@ -54,7 +58,7 @@ namespace MyFace
         private void VideoCapture_ImageGrabbed(object? sender, EventArgs e)
         {
             videoCapture.Retrieve(frame, 0);
-            currentFrame = frame.ToImage<Bgr, Byte>().Resize(500, imgPrincipal.Height, Inter.Cubic);
+            currentFrame = frame.ToImage<Bgr, Byte>().Resize(imgPrincipal.Width, imgPrincipal.Height, Inter.Cubic);
 
             if (true)
             {
@@ -105,10 +109,10 @@ namespace MyFace
                                         FontFace.HersheyComplex, 0.9, new Bgr(Color.Orange).MCvScalar);
                                     CvInvoke.Rectangle(currentFrame, face, new Bgr(Color.Green).MCvScalar, 2);
 
-                                    string path = Directory.GetCurrentDirectory() + @"\TrainedImages\Out\";
-
                                     if (FuzzyImage(1500))
                                     {
+                                        string path = Directory.GetCurrentDirectory() + @"\TrainedImages\Out\";
+
                                         if (!Directory.Exists(path))
                                             Directory.CreateDirectory(path);
 
@@ -148,24 +152,16 @@ namespace MyFace
             List<bool> incompativel = new List<bool>();
 
             Bitmap? map1 = new Bitmap(image1);
-            Mat mat1 = map1.ToMat();
-            Image<Gray, Byte> rImage1 = mat1.ToImage<Gray, byte>();
-            Image<Gray, Byte> img1 = rImage1.Convert<Gray, Byte>().Resize(200, 200, Inter.Cubic);
-            CvInvoke.EqualizeHist(img1, img1);
-            Image item1 = img1.AsBitmap();
-
+            Image item1 = EmguConvertImage(image1, ref map1);
             Bitmap? map2 = new Bitmap(image2);
-            Mat mat2 = map2.ToMat();
-            Image<Gray, Byte> rImage2 = mat2.ToImage<Gray, byte>();
-            Image<Gray, Byte> img2 = rImage2.Convert<Gray, Byte>().Resize(200, 200, Inter.Cubic);
-            CvInvoke.EqualizeHist(img2, img2);
-            Image item2 = img2.AsBitmap();
+            Image item2 = EmguConvertImage(image2, ref map2);
 
-            if (item1.Width.Equals(item2.Width) && item1.Height.Equals(item2.Height))
+            if (ValidatedSizeImages(item1, item2)) // item1.Width.Equals(item2.Width) && item1.Height.Equals(item2.Height))
             {
                 map1 = new Bitmap(item1, item1.Width, item1.Height);
                 map2 = new Bitmap(item2, item2.Width, item2.Height);
-            }else
+            }
+            else
             {
                 return new bool[1]{ false };
             }
@@ -179,10 +175,7 @@ namespace MyFace
                 {
                     for(int y = 0; y < map1.Height; y++)
                     {
-                        Color ref1 = map1.GetPixel(x, y);
-                        Color ref2 = map2.GetPixel(x, y);
-
-                        if (map1.GetPixel(x, y).Equals(map2.GetPixel(x, y)))
+                        if (ValidatedImagePixel(map1, map2, x, y)) // map1.GetPixel(x, y).Equals(map2.GetPixel(x, y)))
                         {
                             rCompativel.SetPixel(x, y, map1.GetPixel(x, y));
                             compativel.Add(true);
@@ -202,18 +195,48 @@ namespace MyFace
             double total = compativel.Count + incompativel.Count;
             double porcCompativel = (compativel.Count/total) *100;
 
-            if ((compativel.Count > 100 && compativel.Count < 200) || (compativel.Count > 900 && compativel.Count < 964) || compativel.Count > 1100)
+            if ((compativel.Count > 964 && compativel.Count < 999) || compativel.Count > 1232)
             {
+#if DEBUG
                 Debug.WriteLine("DataLog: " + DateTime.Now);
                 Debug.WriteLine("compativel: " + porcCompativel.ToString("0.00") + "%");
                 Debug.WriteLine("compativel: " + compativel.Count + "; incompativel: " + incompativel.Count);
+#endif
+                if (Max < compativel.Count)
+                {
+                    if (Max < compativel.Count) Max = compativel.Count;
+                    this.tssCompativel.Text = compativel.Count.ToString();
+                }
+                this.tssIncompativel.Text = incompativel.Count.ToString();
+                this.tssTaxaPixel.Text = porcCompativel.ToString("0.00") + "%";
             }
+            
             return compativel.ToArray();
+        }
+
+        private bool ValidatedImagePixel(Bitmap map1, Bitmap map2, int x, int y)
+        {
+            return map1.GetPixel(x, y).Equals(map2.GetPixel(x, y)) ? true : false;
+        }
+
+        private bool ValidatedSizeImages(Image item1, Image item2)
+        {
+            return item1.Width.Equals(item2.Width) && item1.Height.Equals(item2.Height) ? true : false;
+        }
+
+        private Image EmguConvertImage(Image image, ref Bitmap bitmap)
+        {
+            Mat mat = bitmap.ToMat();
+            Image<Gray, Byte> Image = mat.ToImage<Gray, byte>();
+            Image<Gray, Byte> img = Image.Convert<Gray, Byte>().Resize(200, 200, Inter.Cubic);
+            CvInvoke.EqualizeHist(img, img);
+            return img.AsBitmap();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            button1.Enabled = false;
+            btnTrain.Enabled = false;
+            btnCapt.Enabled = false;
             EnabledTrain = true;
             TrainProcess();
         }
@@ -225,16 +248,10 @@ namespace MyFace
 
             foreach (string file in files)
             {
-#if avancado || true
                 Debug.WriteLine(file);           
                 Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(200, 200, Inter.Cubic);
                 CvInvoke.EqualizeHist(trainedImage, trainedImage);
                 bitmaps.Add(trainedImage.AsBitmap());
-#else
-
-                Bitmap bitmap = new Bitmap(file);
-                bitmaps.Add(bitmap);
-#endif
             }
 
             Debug.WriteLine("PROCESS IMAGE ...");
@@ -268,5 +285,17 @@ namespace MyFace
             picResultTrain.Image = result;
         }
 
+        private void limparToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string path = Directory.GetCurrentDirectory() + @"\TrainedImages";
+            string[] files = Directory.GetFiles(path);
+
+            if(files.Length > 0) 
+                Directory.Delete(path, true);
+
+            btnCapt.Enabled = true;
+            EnabledSaveImage = false;
+            EnabledTrain= false;
+        }
     }
 }
