@@ -86,12 +86,11 @@
             // 
             this.txtCaminho.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtCaminho.BackColor = System.Drawing.SystemColors.Menu;
             this.txtCaminho.Location = new System.Drawing.Point(12, 27);
             this.txtCaminho.Name = "txtCaminho";
-            this.txtCaminho.ReadOnly = true;
             this.txtCaminho.Size = new System.Drawing.Size(601, 23);
             this.txtCaminho.TabIndex = 3;
-            this.txtCaminho.Click += new System.EventHandler(this.txtCaminho_Click);
             // 
             // btnCapt
             // 
@@ -293,6 +292,7 @@
             this.Name = "frmMyFace";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "My FACE [DEV]";
+            this.Load += new System.EventHandler(this.frmMyFace_Load);
             ((System.ComponentModel.ISupportInitialize)(this.imgPrincipal)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgResult)).EndInit();
             this.menuStrip1.ResumeLayout(false);
