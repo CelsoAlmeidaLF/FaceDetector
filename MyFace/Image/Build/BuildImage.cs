@@ -1,5 +1,4 @@
 ﻿using System.Runtime.Versioning;
-using System;
 
 namespace MyFace
 {

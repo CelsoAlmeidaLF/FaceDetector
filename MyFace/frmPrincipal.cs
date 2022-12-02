@@ -1,6 +1,5 @@
 using Emgu.CV;
 using Emgu.CV.CvEnum;
-using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using MyFace.Util;
 using System.Diagnostics;
@@ -22,6 +21,7 @@ namespace MyFace
         public Bitmap rInCompativel;
         private InteligentEmgu inteligent;
         public Image<Bgr, byte> resultImage { get; private set; }
+        public string ISO { get; private set; }
         #endregion
 
         public frmMyFace()
@@ -35,15 +35,14 @@ namespace MyFace
             EnabledSaveImage = true;
             btnTrain.Enabled = true;
         }
-
         private void btnWebCam_Click(object sender, EventArgs e)
         {
+            ISO = cbISOS.Text;
             if (videoCapture != null && videoCapture.IsOpened) return; 
             videoCapture = new VideoCapture();      
             videoCapture.ImageGrabbed += VideoCapture_ImageGrabbed;
             videoCapture.Start();
         }
-
         private void limparToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string path = Directory.GetCurrentDirectory() + @"\TrainedImages";
@@ -56,12 +55,10 @@ namespace MyFace
             EnabledSaveImage = false;
             EnabledTrain = false;
         }
-
         private void frmMyFace_Load(object sender, EventArgs e)
         {
             inteligent = new InteligentEmgu();
         }
-
         private void button1_Click(object sender, EventArgs e)
         {
             btnTrain.Enabled = false;
@@ -69,8 +66,6 @@ namespace MyFace
             EnabledTrain = true;
             TrainProcess(sender, e);
         }
-        #endregion
-
         private void VideoCapture_ImageGrabbed(object? sender, EventArgs e)
         {
             videoCapture.Retrieve(frame, 0);
@@ -87,19 +82,22 @@ namespace MyFace
                         imgResult.SizeMode = inteligent.Result.SizeMode;
                         imgResult.Image = inteligent.Result.Image;
 
-                        if (EnabledSaveImage) SaveImage(@"\TrainedImages");
+                        if (EnabledSaveImage) SaveImage(@"\");
                         if (EnabledTrain)
                         {
                             if ((imgResult.Image != null && picResultTrain.Image != null))
                             {
-                                inteligent.compativel = inteligent.ComparaImagem(resultImage.Resize(200, 200, Inter.Cubic).AsBitmap(), picResultTrain.Image);
+                                inteligent.compativel = inteligent.ComparaImagem(
+                                    ISO,
+                                    resultImage.Resize(200, 200, Inter.Cubic).AsBitmap(), 
+                                    picResultTrain.Image);
                                 BuildInteligentImage(sender, e);
                                 if (inteligent.FuzzyISO("basic"))
                                 {
                                     if (inteligent.FuzzyISO("complet"))
                                     {
                                         RectangleFaceDetect("Cath", face);
-                                        SaveImage(@"\TrainedImages\Out\");
+                                        SaveImage(@"\Saida\");
                                     }
                                     else
                                     {
@@ -114,6 +112,7 @@ namespace MyFace
 
             imgPrincipal.Image = currentFrame.AsBitmap();
         }
+        #endregion
 
         private void RectangleFaceDetect(string label, Rectangle face)
         {
@@ -121,71 +120,85 @@ namespace MyFace
                 FontFace.HersheyComplex, 0.9, new Bgr(Color.Orange).MCvScalar);
             CvInvoke.Rectangle(currentFrame, face, new Bgr(Color.Green).MCvScalar, 2);
         }
-
-        private void SaveImage(string vFolder)
+        private void SaveImage(string folder)
         {
-            string path = Directory.GetCurrentDirectory() + vFolder;
-            if (!Directory.Exists(path)) 
-                Directory.CreateDirectory(path);
+            try
+            {
+                string path = Directory.GetCurrentDirectory() + @"\TrainedImages" + folder;
+                if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
-            Task.Factory.StartNew(() => {
-                for (int i = 0; i < 6; i++)
+                Task.Factory.StartNew(() =>
                 {
-                    resultImage.Resize(200, 200, Inter.Cubic).Save(path + @"\" +
-                        Environment.UserName + "_" +
-                        DateTime.Now.ToString("ddmmyyyyhhmmss") + ".jpg");
-                    Thread.Sleep(1000);
-                }
-            });
-
-            EnabledSaveImage = false;
+                    for (int i = 0; i < 6; i++)
+                    {
+                        resultImage.Resize(200, 200, Inter.Cubic).Save(path +
+                            Environment.UserName + "_" +
+                            DateTime.Now.ToString("ddmmyyyyhhmmss") + ".jpg");
+                        Thread.Sleep(1000);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Erro ao salvar", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                EnabledSaveImage = false;
+            }
         }
-
         private void BuildInteligentImage(object? sender, EventArgs e)
         {
             this.imgCompativel.Image = inteligent.ImageCompativel;
             this.imgIncompativel.Image = inteligent.ImageInCompativel;
-            this.tssCompativel.Text = inteligent.TextCompativel;
+            this.tssCompativel.Text = inteligent.TextCompativel + " / " + inteligent.compativel.Length;
             this.tssIncompativel.Text = inteligent.TextIncompativel;
             this.tssTaxaPixel.Text = inteligent.TextTaxaPixel;
         }
-
         private void TrainProcess(object sender, EventArgs e)
         {
             string path;
-            if (txtCaminho.Text != "") path = Directory.GetCurrentDirectory() + @"\TrainedImages" + "\\" + txtCaminho;
+            int arg = 6;
+            int R = arg; 
+
+            if ((string)cbISOS.Text != "") path = Directory.GetCurrentDirectory() + @"\TrainedImages" + "\\" + cbISOS.Text;
             else path = Directory.GetCurrentDirectory() + @"\TrainedImages";
             string[] files = Directory.GetFiles(path);
+            string[] xfiles = new string[4];
 
-            // Cria Coleção de Imagens
-            CreateColectionImage(files);
+            if(files != null || files.Length != 0)
+                for (int i = 0; i < 4; i++)
+                    xfiles[i] = files[i];
 
-            Bitmap? bitBeta = null;
-            Bitmap result = new Bitmap(32, 32);
+            CreateColectionImage(xfiles);
+
+            Bitmap[] images = new Bitmap[2];
+            Bitmap result = new Bitmap(200, 200);
 
             foreach (Image image in bitmaps)
             {
-                Bitmap bitAlfa = new Bitmap(image);
-                
-                result = new Bitmap(bitAlfa.Width, bitAlfa.Height);
-
-                for (int x = 0; x < bitAlfa.Width; x++)
+                images[0] = new Bitmap(image);      
+                result = new Bitmap(image.Width, image.Height);
+                if (images[0] != null && images[1] != null)
                 {
-                    for (int y = 0; y < bitAlfa.Height; y++)
+                    for (int y = 0; y < images[0].Height; y++)
                     {
-                        if (bitBeta != null && bitAlfa.GetPixel(x, y).Equals(bitBeta.GetPixel(x, y)))
+                        for (int x = 0; x < images[0].Width; x++)
                         {
-                            result.SetPixel(x, y, bitBeta.GetPixel(x, y));
+                            Color[] color = new Color[2];
+                            color[0] = images[0].GetPixel(x, y);
+                            color[1] = images[1].GetPixel(x, y);
+
+                            if (color[0].R >= color[1].R - R && color[0].R <= color[1].R + R)
+                                result.SetPixel(x, y, images[0].GetPixel(x, y));
                         }
                     }
-                }
-
-                if (bitBeta == null) { bitBeta = bitAlfa; }
+                }             
+                images[1] = images[0];
             }
 
             picResultTrain.Image = result;
         }
-
         private void CreateColectionImage(string[] files)
         {
             foreach (string file in files)

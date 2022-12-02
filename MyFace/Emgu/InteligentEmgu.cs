@@ -14,11 +14,12 @@ namespace MyFace
         public double compatibilidade { get; set; }
         public Bitmap ImageCompativel { get; private set; }
         public Bitmap ImageInCompativel { get; private set; }
-        public int Max { get; private set; }
+        public int Max { get; private set; } = 12000;
+        public Dictionary<string, int> ISO { get; private set; }
         public string TextCompativel { get; private set; }
         public string TextIncompativel { get; private set; }
         public string TextTaxaPixel { get; private set; }
-        public CascadeClassifier cascadeClassifier = new CascadeClassifier("haarcascade_frontalface_alt.xml");
+        public CascadeClassifier cascadeClassifier { get; set; } = new CascadeClassifier("haarcascade_frontalface_alt.xml");
         #endregion
 
         public InteligentEmgu()
@@ -26,6 +27,18 @@ namespace MyFace
             isos = new Dictionary<string, double[]>();
             isos.Add("basic", new double[] { 0, 0, 0, 0, 0 });
             isos.Add("complet", new double[] { 0, 0, 0, 0, 0 });
+
+            ISO = new Dictionary<string, int>();
+            ISO.Add("ISO100", 12000);
+            ISO.Add("ISO150", 12000);
+            ISO.Add("ISO200", 17000);
+            ISO.Add("ISO300", 12000);
+            ISO.Add("ISO400", 12000);
+            ISO.Add("ISO500", 12000);
+            ISO.Add("ISO600", 12000);
+            ISO.Add("ISO700", 12000);
+            ISO.Add("ISO800", 12000);
+            ISO.Add("ISO900", 12000);
         }
 
         public bool FuzzyISO(string iso)
@@ -72,7 +85,7 @@ namespace MyFace
             }
         }
 
-        public bool[] ComparaImagem(Image entrada, Image comparer)
+        public bool[] ComparaImagem(string iso, Image entrada, Image comparer)
         {
             List<bool> compativel = new List<bool>();
             List<bool> incompativel = new List<bool>();
@@ -106,7 +119,7 @@ namespace MyFace
             double total = compativel.Count + incompativel.Count;
             double porcCompativel = (compativel.Count / total) * 100;
 
-            if (FuzzyImage(new int[] { 300, 900, 2000, 0, 0 }))
+            if (FuzzyImage(new int[] { 600, 1000, 5000, 0, 0 }))
             {
 #if DEBUG
                 Debug.WriteLine("DataLog: " + DateTime.Now);
@@ -116,8 +129,8 @@ namespace MyFace
                 if (Max < compativel.Count)
                 {
                     if (Max < compativel.Count) Max = compativel.Count;
-                    isos["basic"] = new double[] { Max - (Max / 2), Max + (Max * 2), Max - (Max / 3), Max + (Max / 2), Max };
-                    isos["complet"] = new double[] { 1300, 0, 0, 0, 0 };
+                    isos["basic"] = new double[] { Max - (Max / 4), Max, Max + 100 };
+                    isos["complet"] = new double[] { ISO[iso], 0, 0, 0, 0 };
                     TextCompativel = compativel.Count.ToString();
                 }
 
@@ -137,7 +150,13 @@ namespace MyFace
 
         private bool ValidatedImagePixel(Bitmap map1, Bitmap map2, int x, int y)
         {
-            return map1.GetPixel(x, y).Equals(map2.GetPixel(x, y)) ? true : false;
+            int arg = 20;
+            int B = arg;
+            Color[] color = new Color[2];
+            color[0] = map1.GetPixel(x, y);
+            color[1] = map2.GetPixel(x, y);
+            if ((color[0].B >= color[1].B - B && color[0].B <= color[1].B + B)) return true;
+            else return false;
         }
 
         private Image EmguConvertImage(Image image, ref Bitmap bitmap)

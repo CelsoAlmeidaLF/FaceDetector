@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMyFace));
             this.imgPrincipal = new System.Windows.Forms.PictureBox();
             this.imgResult = new System.Windows.Forms.PictureBox();
             this.txtCaminho = new System.Windows.Forms.TextBox();
@@ -35,7 +36,6 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.imagemToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abrirToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.limparToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.webCAMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ligarWebCamToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.desligarWebCamToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -51,6 +51,7 @@
             this.btnTrain = new System.Windows.Forms.Button();
             this.imgCompativel = new System.Windows.Forms.PictureBox();
             this.imgIncompativel = new System.Windows.Forms.PictureBox();
+            this.cbISOS = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.imgPrincipal)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.imgResult)).BeginInit();
             this.menuStrip1.SuspendLayout();
@@ -87,9 +88,9 @@
             this.txtCaminho.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtCaminho.BackColor = System.Drawing.SystemColors.Menu;
-            this.txtCaminho.Location = new System.Drawing.Point(12, 27);
+            this.txtCaminho.Location = new System.Drawing.Point(139, 27);
             this.txtCaminho.Name = "txtCaminho";
-            this.txtCaminho.Size = new System.Drawing.Size(601, 23);
+            this.txtCaminho.Size = new System.Drawing.Size(474, 23);
             this.txtCaminho.TabIndex = 3;
             // 
             // btnCapt
@@ -118,8 +119,7 @@
             // imagemToolStripMenuItem
             // 
             this.imagemToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.abrirToolStripMenuItem,
-            this.limparToolStripMenuItem});
+            this.abrirToolStripMenuItem});
             this.imagemToolStripMenuItem.Name = "imagemToolStripMenuItem";
             this.imagemToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
             this.imagemToolStripMenuItem.Text = "Imagem";
@@ -127,15 +127,8 @@
             // abrirToolStripMenuItem
             // 
             this.abrirToolStripMenuItem.Name = "abrirToolStripMenuItem";
-            this.abrirToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.abrirToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.abrirToolStripMenuItem.Text = "Abrir";
-            // 
-            // limparToolStripMenuItem
-            // 
-            this.limparToolStripMenuItem.Name = "limparToolStripMenuItem";
-            this.limparToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
-            this.limparToolStripMenuItem.Text = "Limpar TrainedImages";
-            this.limparToolStripMenuItem.Click += new System.EventHandler(this.limparToolStripMenuItem_Click);
             // 
             // webCAMToolStripMenuItem
             // 
@@ -149,13 +142,13 @@
             // ligarWebCamToolStripMenuItem
             // 
             this.ligarWebCamToolStripMenuItem.Name = "ligarWebCamToolStripMenuItem";
-            this.ligarWebCamToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.ligarWebCamToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.ligarWebCamToolStripMenuItem.Text = "Ligar WebCam";
             // 
             // desligarWebCamToolStripMenuItem
             // 
             this.desligarWebCamToolStripMenuItem.Name = "desligarWebCamToolStripMenuItem";
-            this.desligarWebCamToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.desligarWebCamToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.desligarWebCamToolStripMenuItem.Text = "Desligar WebCam";
             // 
             // statusStrip1
@@ -268,11 +261,31 @@
             this.imgIncompativel.TabIndex = 11;
             this.imgIncompativel.TabStop = false;
             // 
+            // cbISOS
+            // 
+            this.cbISOS.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbISOS.FormattingEnabled = true;
+            this.cbISOS.Items.AddRange(new object[] {
+            "ISO100",
+            "ISO150",
+            "ISO200",
+            "ISO300",
+            "ISO400",
+            "ISO600",
+            "ISO700",
+            "ISO800",
+            "ISO900"});
+            this.cbISOS.Location = new System.Drawing.Point(12, 27);
+            this.cbISOS.Name = "cbISOS";
+            this.cbISOS.Size = new System.Drawing.Size(121, 23);
+            this.cbISOS.TabIndex = 12;
+            // 
             // frmMyFace
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(863, 423);
+            this.Controls.Add(this.cbISOS);
             this.Controls.Add(this.imgIncompativel);
             this.Controls.Add(this.imgCompativel);
             this.Controls.Add(this.btnTrain);
@@ -284,7 +297,9 @@
             this.Controls.Add(this.imgResult);
             this.Controls.Add(this.imgPrincipal);
             this.Controls.Add(this.menuStrip1);
+            this.ForeColor = System.Drawing.SystemColors.ControlText;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -334,7 +349,7 @@
         private ToolStripStatusLabel tssIncompativel;
         private ToolStripStatusLabel toolStripStatusLabel1;
         private ToolStripStatusLabel tssTaxaPixel;
-        private ToolStripMenuItem limparToolStripMenuItem;
         private ToolStripMenuItem desligarWebCamToolStripMenuItem;
+        private ComboBox cbISOS;
     }
 }
